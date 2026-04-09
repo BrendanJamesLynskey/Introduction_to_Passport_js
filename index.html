@@ -1,0 +1,1581 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Introduction to Passport.js</title>
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+  <link href="https://fonts.googleapis.com/css2?family=Playfair+Display:wght@400;700&family=DM+Sans:wght@300;400;500;600&family=JetBrains+Mono:wght@400;500&display=swap" rel="stylesheet">
+  <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/reveal.js/4.6.1/reveal.min.css">
+  <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/reveal.js/4.6.1/theme/black.min.css">
+  <style>
+:root {
+  --amber:  #f5a623;
+  --green:  #4ecb8d;
+  --purple: #a78bfa;
+  --blue:   #60a5fa;
+  --red:    #f87171;
+  --bg:     #0a0a0f;
+  --bg2:    #10101a;
+  --bg3:    #181824;
+  --border: #2a2a3a;
+  --text:   #e8e8f0;
+  --muted:  #8888a8;
+}
+
+.reveal-viewport { background: var(--bg); }
+.reveal .slides section { background: transparent; }
+
+.reveal { font-family: 'DM Sans', sans-serif; color: var(--text); }
+.reveal h1, .reveal h2, .reveal h3 { font-family: 'Playfair Display', serif; font-weight: 700; }
+.reveal h1 { font-size: 1.6em; color: var(--amber); line-height: 1.1; }
+.reveal h2 { font-size: 1.1em; color: var(--amber); margin-bottom: .2em; }
+.reveal h3 { font-size: .78em; color: var(--green); margin-bottom: .15em; }
+.reveal p  { font-size: .56em; line-height: 1.45; color: var(--text); }
+.reveal li { font-size: .54em; line-height: 1.45; margin-bottom: .1em; }
+.reveal code { font-family: 'JetBrains Mono', monospace; font-size: .72em; }
+.reveal pre  { box-shadow: none; background: var(--bg3); border: 1px solid var(--border);
+               border-radius: 6px; padding: .3em .5em; margin: .25em 0; }
+.reveal pre code { font-size: .52em; line-height: 1.35; background: transparent; color: #cdd6f4; }
+
+.slide-hdr {
+  display: flex; align-items: center; gap: .4em;
+  border-bottom: 1px solid var(--border);
+  padding-bottom: .2em; margin-bottom: .3em;
+}
+.slide-hdr .tag {
+  font-family: 'JetBrains Mono', monospace;
+  font-size: .42em; font-weight: 500;
+  color: var(--bg); background: var(--amber);
+  padding: .1em .4em; border-radius: 3px;
+  letter-spacing: .04em;
+}
+.slide-hdr h2 { margin: 0; font-size: .95em; }
+
+.cols   { display: grid; gap: .5em; }
+.cols-2 { grid-template-columns: 1fr 1fr; }
+.cols-3 { grid-template-columns: 1fr 1fr 1fr; }
+.cols-6040 { grid-template-columns: 6fr 4fr; }
+.cols-4060 { grid-template-columns: 4fr 6fr; }
+
+.card {
+  background: var(--bg2); border: 1px solid var(--border);
+  border-radius: 6px; padding: .35em .6em;
+}
+.card.amber { border-left: 3px solid var(--amber); }
+.card.green { border-left: 3px solid var(--green); }
+.card.purple{ border-left: 3px solid var(--purple); }
+.card.blue  { border-left: 3px solid var(--blue); }
+.card.red   { border-left: 3px solid var(--red); }
+.card h3 { font-size: .64em; margin: 0 0 .12em; }
+.card p  { font-size: .52em; margin: 0; color: #b8b8d0; }
+.card ul { margin: 0; padding-left: 1em; }
+.card li { font-size: .52em; color: #b8b8d0; margin-bottom: .02em; }
+
+.reveal table { width: 100%; border-collapse: collapse; font-size: .5em; }
+.reveal table th { background: var(--bg3); color: var(--amber); font-weight: 600;
+                   padding: .2em .4em; border: 1px solid var(--border); text-align: left; }
+.reveal table td { padding: .18em .4em; border: 1px solid var(--border); color: #ccc; }
+.reveal table tr:nth-child(even) td { background: #0e0e18; }
+
+.a  { color: var(--amber); font-weight: 600; }
+.g  { color: var(--green); font-weight: 600; }
+.p  { color: var(--purple); font-weight: 600; }
+.b  { color: var(--blue); font-weight: 600; }
+.r  { color: var(--red); font-weight: 600; }
+.mono { font-family: 'JetBrains Mono', monospace; }
+
+svg.diagram { display: block; margin: 0 auto; overflow: visible; }
+
+.pill {
+  display: inline-block; font-family: 'JetBrains Mono', monospace;
+  font-size: .44em; padding: .08em .4em; border-radius: 99px;
+  border: 1px solid; margin: 0 .08em;
+}
+.pill.amber { color: var(--amber); border-color: var(--amber); }
+.pill.green { color: var(--green); border-color: var(--green); }
+.pill.purple{ color: var(--purple); border-color: var(--purple); }
+.pill.blue  { color: var(--blue); border-color: var(--blue); }
+
+.reveal .slide-footer { display: none; }
+.title-slide h1 { font-size: 1.8em; }
+.title-slide .subtitle {
+  font-size: .7em; color: var(--green); font-family: 'DM Sans', sans-serif;
+  font-weight: 300; letter-spacing: .04em; margin: .3em 0 .6em;
+}
+.title-slide .meta { font-size: .48em; color: var(--muted); font-family: 'JetBrains Mono', monospace; }
+
+.reveal ul, .reveal ol { margin: .15em 0 .15em 1em; }
+.reveal .slides > section { display: flex !important; flex-direction: column !important; overflow-y: auto !important; align-items: stretch !important; justify-content: flex-start !important; }
+  </style>
+</head>
+<body>
+  <div class="reveal"><div class="slides">
+
+<!-- ============================================================ -->
+<!-- SLIDE 01 — TITLE -->
+<!-- ============================================================ -->
+<section class="title-slide" data-background-color="#0a0a0f">
+  <div style="text-align:left; max-width:820px; margin:0 auto; padding: 1em 0;">
+    <div style="font-family:'JetBrains Mono',monospace; font-size:.5em; color:var(--muted); margin-bottom:.4em; letter-spacing:.1em;">EXPRESS AUTHENTICATION MIDDLEWARE</div>
+    <h1>Introduction to Passport.js</h1>
+    <div class="subtitle">Strategies, Sessions &amp; OAuth &mdash; Authentication for Node.js</div>
+    <div style="width:60px; height:3px; background:var(--amber); margin-bottom:1.4em;"></div>
+    <div class="meta">19 slides &middot; strategies, OAuth, JWT, sessions, security &middot; 2026</div>
+  </div>
+</section>
+
+<!-- ============================================================ -->
+<!-- SLIDE 02 — AGENDA -->
+<!-- ============================================================ -->
+<section>
+  <div class="slide-hdr"><span class="tag">01</span><h2>Agenda</h2></div>
+  <div class="cols cols-2">
+    <div class="card amber">
+      <h3>Foundations</h3>
+      <ul>
+        <li>What Is Passport.js?</li>
+        <li>Core Concepts &mdash; Strategies, Serialize, Deserialize</li>
+        <li>Session Setup</li>
+        <li>Local Strategy &mdash; Username &amp; Password</li>
+        <li>Registration &amp; Login Flow</li>
+      </ul>
+    </div>
+    <div class="card green">
+      <h3>OAuth &amp; JWT</h3>
+      <ul>
+        <li>OAuth 2.0 Concepts</li>
+        <li>Google OAuth Strategy</li>
+        <li>GitHub OAuth Strategy</li>
+        <li>JWT Strategy</li>
+      </ul>
+    </div>
+    <div class="card purple">
+      <h3>Patterns &amp; Security</h3>
+      <ul>
+        <li>Protecting Routes</li>
+        <li>User Model &amp; Database</li>
+        <li>Multiple Strategies</li>
+        <li>Security Best Practices</li>
+      </ul>
+    </div>
+    <div class="card blue">
+      <h3>Production</h3>
+      <ul>
+        <li>Error Handling &amp; Flash Messages</li>
+        <li>Testing Authentication</li>
+        <li>Complete Working Example</li>
+        <li>Summary &amp; Next Steps</li>
+      </ul>
+    </div>
+  </div>
+</section>
+
+<!-- ============================================================ -->
+<!-- SLIDE 03 — WHAT IS PASSPORT.JS? -->
+<!-- ============================================================ -->
+<section>
+  <div class="slide-hdr"><span class="tag">02</span><h2>What Is Passport.js?</h2></div>
+  <div class="cols cols-6040">
+    <div>
+      <div class="card amber" style="margin-bottom:.4em;">
+        <h3>Philosophy: "Simple, Unobtrusive Authentication"</h3>
+        <p>Passport.js is authentication <span class="a">middleware</span> for Node.js created by <span class="g">Jared Hanson</span> in 2011. It uses a <span class="b">strategy pattern</span> to support 500+ authentication mechanisms &mdash; from local username/password to OAuth providers like Google, GitHub, Facebook, and more.</p>
+      </div>
+      <div class="card green">
+        <h3>Key Characteristics</h3>
+        <ul>
+          <li><span class="a">Strategy pattern</span> &mdash; each auth method is a pluggable strategy</li>
+          <li><span class="a">500+ strategies</span> &mdash; local, OAuth, SAML, LDAP, JWT, and more</li>
+          <li><span class="a">Express-native</span> &mdash; integrates seamlessly as middleware</li>
+          <li><span class="a">~2.5M weekly npm downloads</span> &mdash; the most popular Node auth library</li>
+          <li><span class="a">Session support</span> &mdash; built-in serialization/deserialization</li>
+        </ul>
+      </div>
+    </div>
+    <div>
+      <div class="card blue" style="margin-bottom:.4em;">
+        <h3>Install &amp; Basic Setup</h3>
+        <pre><code class="language-bash">npm install passport express-session</code></pre>
+        <pre><code class="language-javascript">const express = require('express');
+const passport = require('passport');
+const session = require('express-session');
+
+const app = express();
+
+app.use(session({
+  secret: 'keyboard cat',
+  resave: false,
+  saveUninitialized: false
+}));
+
+app.use(passport.initialize());
+app.use(passport.session());</code></pre>
+      </div>
+      <div class="card purple">
+        <h3>How It Works</h3>
+        <p>Passport delegates authentication to <span class="a">strategies</span>. You configure one or more strategies, then call <code>passport.authenticate('strategy')</code> as route middleware.</p>
+      </div>
+    </div>
+  </div>
+</section>
+
+<!-- ============================================================ -->
+<!-- SLIDE 04 — CORE CONCEPTS -->
+<!-- ============================================================ -->
+<section>
+  <div class="slide-hdr"><span class="tag">03</span><h2>Core Concepts &mdash; Strategies, Serialize, Deserialize</h2></div>
+  <div class="cols cols-2">
+    <div>
+      <div class="card amber" style="margin-bottom:.4em;">
+        <h3>The Strategy Pattern</h3>
+        <pre><code class="language-javascript">const LocalStrategy =
+  require('passport-local').Strategy;
+
+passport.use(new LocalStrategy(
+  (username, password, done) =&gt; {
+    User.findOne({ username }, (err, user) =&gt; {
+      if (err) return done(err);
+      if (!user) return done(null, false,
+        { message: 'Unknown user' });
+      if (!user.validPassword(password))
+        return done(null, false,
+          { message: 'Wrong password' });
+      return done(null, user);
+    });
+  }
+));</code></pre>
+        <p>Each strategy provides a <span class="a">verify callback</span> that receives credentials and calls <code>done()</code> with the result.</p>
+      </div>
+    </div>
+    <div>
+      <div class="card green" style="margin-bottom:.4em;">
+        <h3>serializeUser</h3>
+        <pre><code class="language-javascript">// Store user ID in the session
+passport.serializeUser((user, done) =&gt; {
+  done(null, user.id);
+});</code></pre>
+        <p>Called after successful authentication. Determines what data is stored in <code>req.session.passport.user</code>.</p>
+      </div>
+      <div class="card purple" style="margin-bottom:.4em;">
+        <h3>deserializeUser</h3>
+        <pre><code class="language-javascript">// Retrieve full user from session ID
+passport.deserializeUser((id, done) =&gt; {
+  User.findById(id, (err, user) =&gt; {
+    done(err, user);
+  });
+});</code></pre>
+        <p>Called on every request. Fetches the full user object and attaches it to <code>req.user</code>.</p>
+      </div>
+      <div class="card blue">
+        <h3>Flow Summary</h3>
+        <p><span class="a">Login:</span> verify callback &rarr; serializeUser &rarr; session<br>
+        <span class="g">Each request:</span> session &rarr; deserializeUser &rarr; req.user</p>
+      </div>
+    </div>
+  </div>
+</section>
+
+<!-- ============================================================ -->
+<!-- SLIDE 05 — SESSION SETUP -->
+<!-- ============================================================ -->
+<section>
+  <div class="slide-hdr"><span class="tag">04</span><h2>Session Setup</h2></div>
+  <div class="cols cols-2">
+    <div>
+      <div class="card amber" style="margin-bottom:.4em;">
+        <h3>express-session Configuration</h3>
+        <pre><code class="language-javascript">const session = require('express-session');
+const MongoStore =
+  require('connect-mongo');
+
+app.use(session({
+  secret: process.env.SESSION_SECRET,
+  resave: false,
+  saveUninitialized: false,
+  store: MongoStore.create({
+    mongoUrl: process.env.MONGO_URI
+  }),
+  cookie: {
+    maxAge: 1000 * 60 * 60 * 24, // 1 day
+    httpOnly: true,
+    secure: process.env.NODE_ENV
+      === 'production',
+    sameSite: 'lax'
+  }
+}));</code></pre>
+      </div>
+      <div class="card green">
+        <h3>Cookie Options Explained</h3>
+        <table>
+          <thead><tr><th>Option</th><th>Purpose</th></tr></thead>
+          <tbody>
+            <tr><td><code>httpOnly</code></td><td>Prevents JavaScript access to cookie</td></tr>
+            <tr><td><code>secure</code></td><td>Cookie sent only over HTTPS</td></tr>
+            <tr><td><code>sameSite</code></td><td>CSRF protection (<code>lax</code> or <code>strict</code>)</td></tr>
+            <tr><td><code>maxAge</code></td><td>Cookie expiration in milliseconds</td></tr>
+          </tbody>
+        </table>
+      </div>
+    </div>
+    <div>
+      <div class="card purple" style="margin-bottom:.4em;">
+        <h3>Session Stores</h3>
+        <table>
+          <thead><tr><th>Store</th><th>Package</th><th>Use Case</th></tr></thead>
+          <tbody>
+            <tr><td><span class="a">Memory</span></td><td>Built-in</td><td>Dev only (leaks!)</td></tr>
+            <tr><td><span class="g">MongoDB</span></td><td><code>connect-mongo</code></td><td>Mongo-based apps</td></tr>
+            <tr><td><span class="b">Redis</span></td><td><code>connect-redis</code></td><td>High performance</td></tr>
+            <tr><td><span class="p">PostgreSQL</span></td><td><code>connect-pg-simple</code></td><td>SQL-based apps</td></tr>
+          </tbody>
+        </table>
+      </div>
+      <div class="card blue" style="margin-bottom:.4em;">
+        <h3>Secret Management</h3>
+        <pre><code class="language-bash"># .env
+SESSION_SECRET=a1b2c3d4e5f6...
+MONGO_URI=mongodb://localhost:27017/myapp</code></pre>
+        <pre><code class="language-javascript">require('dotenv').config();
+// Never hard-code secrets!
+// Use crypto.randomBytes(64).toString('hex')
+// to generate strong secrets</code></pre>
+      </div>
+      <div class="card red">
+        <h3>Common Pitfall</h3>
+        <p><span class="r">Never</span> use the default MemoryStore in production. It leaks memory and does not scale across multiple processes.</p>
+      </div>
+    </div>
+  </div>
+</section>
+
+<!-- ============================================================ -->
+<!-- SLIDE 06 — LOCAL STRATEGY -->
+<!-- ============================================================ -->
+<section>
+  <div class="slide-hdr"><span class="tag">05</span><h2>Local Strategy &mdash; Username &amp; Password</h2></div>
+  <div class="cols cols-2">
+    <div>
+      <div class="card amber" style="margin-bottom:.4em;">
+        <h3>Install &amp; Configure</h3>
+        <pre><code class="language-bash">npm install passport-local bcrypt</code></pre>
+        <pre><code class="language-javascript">const LocalStrategy =
+  require('passport-local').Strategy;
+
+passport.use(new LocalStrategy(
+  { usernameField: 'email' },
+  async (email, password, done) =&gt; {
+    try {
+      const user =
+        await User.findOne({ email });
+      if (!user)
+        return done(null, false,
+          { message: 'No account found' });
+
+      const match =
+        await bcrypt.compare(
+          password, user.password
+        );
+      if (!match)
+        return done(null, false,
+          { message: 'Wrong password' });
+
+      return done(null, user);
+    } catch (err) {
+      return done(err);
+    }
+  }
+));</code></pre>
+      </div>
+    </div>
+    <div>
+      <div class="card green" style="margin-bottom:.4em;">
+        <h3>The Verify Callback</h3>
+        <p>The verify callback receives credentials and must call <code>done()</code> with one of three outcomes:</p>
+        <ul>
+          <li><code>done(null, user)</code> &mdash; <span class="g">success</span></li>
+          <li><code>done(null, false, { message })</code> &mdash; <span class="r">auth failure</span></li>
+          <li><code>done(err)</code> &mdash; <span class="r">server error</span></li>
+        </ul>
+      </div>
+      <div class="card purple" style="margin-bottom:.4em;">
+        <h3>bcrypt Password Hashing</h3>
+        <pre><code class="language-javascript">const bcrypt = require('bcrypt');
+const SALT_ROUNDS = 12;
+
+// Hash on registration
+const hash = await bcrypt.hash(
+  plainPassword, SALT_ROUNDS
+);
+
+// Compare on login
+const isMatch = await bcrypt.compare(
+  plainPassword, hash
+);</code></pre>
+      </div>
+      <div class="card blue">
+        <h3>Custom Field Names</h3>
+        <pre><code class="language-javascript">// Default: username + password
+// Override with options:
+new LocalStrategy({
+  usernameField: 'email',
+  passwordField: 'passwd'
+}, verifyCallback);</code></pre>
+      </div>
+    </div>
+  </div>
+</section>
+
+<!-- ============================================================ -->
+<!-- SLIDE 07 — REGISTRATION & LOGIN FLOW -->
+<!-- ============================================================ -->
+<section>
+  <div class="slide-hdr"><span class="tag">06</span><h2>Registration &amp; Login Flow</h2></div>
+  <div class="cols cols-2">
+    <div>
+      <div class="card amber" style="margin-bottom:.4em;">
+        <h3>Registration Route</h3>
+        <pre><code class="language-javascript">app.post('/register', async (req, res) =&gt; {
+  const { name, email, password } = req.body;
+
+  // Check if user exists
+  const existing =
+    await User.findOne({ email });
+  if (existing) {
+    req.flash('error', 'Email in use');
+    return res.redirect('/register');
+  }
+
+  // Hash password &amp; create user
+  const hash =
+    await bcrypt.hash(password, 12);
+  const user = await User.create({
+    name, email, password: hash
+  });
+
+  // Auto-login after registration
+  req.login(user, (err) =&gt; {
+    if (err) return next(err);
+    res.redirect('/dashboard');
+  });
+});</code></pre>
+      </div>
+      <div class="card green">
+        <h3>Flash Messages</h3>
+        <pre><code class="language-bash">npm install connect-flash</code></pre>
+        <pre><code class="language-javascript">const flash = require('connect-flash');
+app.use(flash());
+
+// Make flash available in templates
+app.use((req, res, next) =&gt; {
+  res.locals.success = req.flash('success');
+  res.locals.error = req.flash('error');
+  next();
+});</code></pre>
+      </div>
+    </div>
+    <div>
+      <div class="card purple" style="margin-bottom:.4em;">
+        <h3>Login Route</h3>
+        <pre><code class="language-javascript">app.post('/login',
+  passport.authenticate('local', {
+    successRedirect: '/dashboard',
+    failureRedirect: '/login',
+    failureFlash: true
+  })
+);</code></pre>
+        <p>Passport handles the entire flow: parse credentials, call verify, serialize user, create session.</p>
+      </div>
+      <div class="card blue" style="margin-bottom:.4em;">
+        <h3>Logout Route</h3>
+        <pre><code class="language-javascript">app.post('/logout', (req, res, next) =&gt; {
+  req.logout((err) =&gt; {
+    if (err) return next(err);
+    req.flash('success', 'Logged out');
+    res.redirect('/');
+  });
+});</code></pre>
+      </div>
+      <div class="card red">
+        <h3>Login Form</h3>
+        <pre><code class="language-html">&lt;form action="/login" method="POST"&gt;
+  &lt;input name="email" type="email"
+    placeholder="Email" required&gt;
+  &lt;input name="password" type="password"
+    placeholder="Password" required&gt;
+  &lt;button type="submit"&gt;Log In&lt;/button&gt;
+&lt;/form&gt;
+&lt;% if (error &amp;&amp; error.length) { %&gt;
+  &lt;p class="alert"&gt;&lt;%= error %&gt;&lt;/p&gt;
+&lt;% } %&gt;</code></pre>
+      </div>
+    </div>
+  </div>
+</section>
+
+<!-- ============================================================ -->
+<!-- SLIDE 08 — OAUTH 2.0 CONCEPTS -->
+<!-- ============================================================ -->
+<section>
+  <div class="slide-hdr"><span class="tag">07</span><h2>OAuth 2.0 Concepts</h2></div>
+  <div class="cols cols-6040">
+    <div>
+      <div class="card amber" style="margin-bottom:.4em;">
+        <h3>Authorization Code Flow</h3>
+        <svg class="diagram" viewBox="0 0 440 180" style="max-width:420px;">
+          <rect x="0" y="10" width="90" height="40" rx="5" fill="none" stroke="var(--amber)" stroke-width="1.5"/>
+          <text x="45" y="35" text-anchor="middle" fill="var(--text)" font-size="10" font-family="JetBrains Mono">User</text>
+          <rect x="120" y="10" width="90" height="40" rx="5" fill="none" stroke="var(--green)" stroke-width="1.5"/>
+          <text x="165" y="35" text-anchor="middle" fill="var(--text)" font-size="10" font-family="JetBrains Mono">Your App</text>
+          <rect x="250" y="10" width="90" height="40" rx="5" fill="none" stroke="var(--blue)" stroke-width="1.5"/>
+          <text x="295" y="35" text-anchor="middle" fill="var(--text)" font-size="10" font-family="JetBrains Mono">Provider</text>
+          <line x1="45" y1="55" x2="45" y2="170" stroke="var(--muted)" stroke-width="1" stroke-dasharray="4"/>
+          <line x1="165" y1="55" x2="165" y2="170" stroke="var(--muted)" stroke-width="1" stroke-dasharray="4"/>
+          <line x1="295" y1="55" x2="295" y2="170" stroke="var(--muted)" stroke-width="1" stroke-dasharray="4"/>
+          <line x1="50" y1="70" x2="160" y2="70" stroke="var(--amber)" stroke-width="1.5" marker-end="url(#arr)"/>
+          <text x="105" y="65" text-anchor="middle" fill="var(--muted)" font-size="8" font-family="DM Sans">1. Login click</text>
+          <line x1="170" y1="85" x2="290" y2="85" stroke="var(--green)" stroke-width="1.5" marker-end="url(#arr)"/>
+          <text x="230" y="80" text-anchor="middle" fill="var(--muted)" font-size="8" font-family="DM Sans">2. Redirect to provider</text>
+          <line x1="290" y1="100" x2="50" y2="100" stroke="var(--blue)" stroke-width="1.5" marker-end="url(#arr)"/>
+          <text x="170" y="95" text-anchor="middle" fill="var(--muted)" font-size="8" font-family="DM Sans">3. User consents</text>
+          <line x1="50" y1="115" x2="160" y2="115" stroke="var(--amber)" stroke-width="1.5" marker-end="url(#arr)"/>
+          <text x="105" y="110" text-anchor="middle" fill="var(--muted)" font-size="8" font-family="DM Sans">4. Auth code callback</text>
+          <line x1="170" y1="130" x2="290" y2="130" stroke="var(--green)" stroke-width="1.5" marker-end="url(#arr)"/>
+          <text x="230" y="125" text-anchor="middle" fill="var(--muted)" font-size="8" font-family="DM Sans">5. Exchange code for token</text>
+          <line x1="290" y1="145" x2="170" y2="145" stroke="var(--blue)" stroke-width="1.5" marker-end="url(#arr)"/>
+          <text x="230" y="140" text-anchor="middle" fill="var(--muted)" font-size="8" font-family="DM Sans">6. Access token + profile</text>
+          <defs><marker id="arr" viewBox="0 0 10 10" refX="10" refY="5" markerWidth="6" markerHeight="6" orient="auto"><path d="M0,0 L10,5 L0,10 Z" fill="var(--muted)"/></marker></defs>
+        </svg>
+      </div>
+      <div class="card green">
+        <h3>Key Terms</h3>
+        <ul>
+          <li><span class="a">Client ID</span> &mdash; public identifier for your app</li>
+          <li><span class="a">Client Secret</span> &mdash; private key (never expose client-side)</li>
+          <li><span class="a">Redirect URI</span> &mdash; where provider sends the user back</li>
+          <li><span class="a">Scopes</span> &mdash; permissions your app requests (email, profile, etc.)</li>
+          <li><span class="a">Access Token</span> &mdash; short-lived credential to call provider APIs</li>
+          <li><span class="a">Refresh Token</span> &mdash; long-lived token to obtain new access tokens</li>
+        </ul>
+      </div>
+    </div>
+    <div>
+      <div class="card purple" style="margin-bottom:.4em;">
+        <h3>Tokens &amp; Scopes</h3>
+        <pre><code class="language-javascript">// Scopes define what data you request
+{
+  scope: ['profile', 'email']
+}
+
+// Access token (short-lived)
+// Used to call provider APIs:
+// GET https://www.googleapis.com/
+//   oauth2/v1/userinfo
+// Authorization: Bearer &lt;access_token&gt;
+
+// Refresh token (long-lived)
+// Exchange for new access token
+// when current one expires</code></pre>
+      </div>
+      <div class="card blue" style="margin-bottom:.4em;">
+        <h3>Redirect URIs</h3>
+        <pre><code class="language-text">Development:
+  http://localhost:3000/auth/google/callback
+
+Production:
+  https://myapp.com/auth/google/callback</code></pre>
+        <p>Must be registered exactly in the provider's developer console. Mismatches cause errors.</p>
+      </div>
+      <div class="card red">
+        <h3>Security Rule</h3>
+        <p><span class="r">Never</span> expose your Client Secret in front-end code or public repositories. Always store in environment variables.</p>
+      </div>
+    </div>
+  </div>
+</section>
+
+<!-- ============================================================ -->
+<!-- SLIDE 09 — GOOGLE OAUTH STRATEGY -->
+<!-- ============================================================ -->
+<section>
+  <div class="slide-hdr"><span class="tag">08</span><h2>Google OAuth Strategy</h2></div>
+  <div class="cols cols-2">
+    <div>
+      <div class="card amber" style="margin-bottom:.4em;">
+        <h3>Install &amp; Configure</h3>
+        <pre><code class="language-bash">npm install passport-google-oauth20</code></pre>
+        <pre><code class="language-javascript">const GoogleStrategy =
+  require('passport-google-oauth20').Strategy;
+
+passport.use(new GoogleStrategy({
+    clientID: process.env.GOOGLE_CLIENT_ID,
+    clientSecret:
+      process.env.GOOGLE_CLIENT_SECRET,
+    callbackURL:
+      '/auth/google/callback'
+  },
+  async (accessToken, refreshToken,
+         profile, done) =&gt; {
+    try {
+      let user = await User.findOne({
+        googleId: profile.id
+      });
+      if (!user) {
+        user = await User.create({
+          googleId: profile.id,
+          name: profile.displayName,
+          email: profile.emails[0].value,
+          avatar: profile.photos[0].value
+        });
+      }
+      return done(null, user);
+    } catch (err) {
+      return done(err);
+    }
+  }
+));</code></pre>
+      </div>
+    </div>
+    <div>
+      <div class="card green" style="margin-bottom:.4em;">
+        <h3>Routes</h3>
+        <pre><code class="language-javascript">// Redirect to Google
+app.get('/auth/google',
+  passport.authenticate('google', {
+    scope: ['profile', 'email']
+  })
+);
+
+// Google callback
+app.get('/auth/google/callback',
+  passport.authenticate('google', {
+    failureRedirect: '/login',
+    failureFlash: true
+  }),
+  (req, res) =&gt; {
+    res.redirect('/dashboard');
+  }
+);</code></pre>
+      </div>
+      <div class="card purple" style="margin-bottom:.4em;">
+        <h3>Google Profile Object</h3>
+        <pre><code class="language-javascript">{
+  id: '1234567890',
+  displayName: 'Jane Doe',
+  name: { givenName: 'Jane',
+           familyName: 'Doe' },
+  emails: [{ value: 'jane@gmail.com',
+              verified: true }],
+  photos: [{ value: 'https://...' }],
+  provider: 'google'
+}</code></pre>
+      </div>
+      <div class="card blue">
+        <h3>Setup in Google Console</h3>
+        <ul>
+          <li>Go to <span class="mono">console.cloud.google.com</span></li>
+          <li>Create OAuth 2.0 credentials</li>
+          <li>Add authorized redirect URIs</li>
+          <li>Enable Google+ API or People API</li>
+        </ul>
+      </div>
+    </div>
+  </div>
+</section>
+
+<!-- ============================================================ -->
+<!-- SLIDE 10 — GITHUB OAUTH STRATEGY -->
+<!-- ============================================================ -->
+<section>
+  <div class="slide-hdr"><span class="tag">09</span><h2>GitHub OAuth Strategy</h2></div>
+  <div class="cols cols-2">
+    <div>
+      <div class="card amber" style="margin-bottom:.4em;">
+        <h3>Install &amp; Configure</h3>
+        <pre><code class="language-bash">npm install passport-github2</code></pre>
+        <pre><code class="language-javascript">const GitHubStrategy =
+  require('passport-github2').Strategy;
+
+passport.use(new GitHubStrategy({
+    clientID:
+      process.env.GITHUB_CLIENT_ID,
+    clientSecret:
+      process.env.GITHUB_CLIENT_SECRET,
+    callbackURL:
+      '/auth/github/callback'
+  },
+  async (accessToken, refreshToken,
+         profile, done) =&gt; {
+    try {
+      let user = await User.findOne({
+        githubId: profile.id
+      });
+      if (!user) {
+        user = await User.create({
+          githubId: profile.id,
+          name: profile.displayName
+            || profile.username,
+          email: profile.emails?.[0]?.value,
+          avatar:
+            profile.photos?.[0]?.value
+        });
+      }
+      return done(null, user);
+    } catch (err) {
+      return done(err);
+    }
+  }
+));</code></pre>
+      </div>
+    </div>
+    <div>
+      <div class="card green" style="margin-bottom:.4em;">
+        <h3>Routes</h3>
+        <pre><code class="language-javascript">app.get('/auth/github',
+  passport.authenticate('github', {
+    scope: ['user:email']
+  })
+);
+
+app.get('/auth/github/callback',
+  passport.authenticate('github', {
+    failureRedirect: '/login',
+    failureFlash: true
+  }),
+  (req, res) =&gt; {
+    res.redirect('/dashboard');
+  }
+);</code></pre>
+      </div>
+      <div class="card purple" style="margin-bottom:.4em;">
+        <h3>GitHub Profile Mapping</h3>
+        <pre><code class="language-javascript">{
+  id: '12345',
+  username: 'janedoe',
+  displayName: 'Jane Doe',
+  profileUrl: 'https://github.com/janedoe',
+  emails: [{ value: 'jane@example.com' }],
+  photos: [{ value: 'https://avatars...' }],
+  provider: 'github'
+}</code></pre>
+      </div>
+      <div class="card blue" style="margin-bottom:.4em;">
+        <h3>GitHub Scopes</h3>
+        <table>
+          <thead><tr><th>Scope</th><th>Access</th></tr></thead>
+          <tbody>
+            <tr><td><code>user:email</code></td><td>Read email addresses</td></tr>
+            <tr><td><code>read:user</code></td><td>Read profile info</td></tr>
+            <tr><td><code>repo</code></td><td>Read/write repositories</td></tr>
+            <tr><td><code>read:org</code></td><td>Read org membership</td></tr>
+          </tbody>
+        </table>
+      </div>
+      <div class="card red">
+        <h3>Email Caveat</h3>
+        <p>GitHub emails can be private. Always request <code>user:email</code> scope and handle the case where <code>profile.emails</code> is empty.</p>
+      </div>
+    </div>
+  </div>
+</section>
+
+<!-- ============================================================ -->
+<!-- SLIDE 11 — JWT STRATEGY -->
+<!-- ============================================================ -->
+<section>
+  <div class="slide-hdr"><span class="tag">10</span><h2>JWT Strategy</h2></div>
+  <div class="cols cols-2">
+    <div>
+      <div class="card amber" style="margin-bottom:.4em;">
+        <h3>Install &amp; Configure</h3>
+        <pre><code class="language-bash">npm install passport-jwt jsonwebtoken</code></pre>
+        <pre><code class="language-javascript">const JwtStrategy =
+  require('passport-jwt').Strategy;
+const ExtractJwt =
+  require('passport-jwt').ExtractJwt;
+
+const opts = {
+  jwtFromRequest:
+    ExtractJwt.fromAuthHeaderAsBearerToken(),
+  secretOrKey: process.env.JWT_SECRET
+};
+
+passport.use(new JwtStrategy(opts,
+  async (jwt_payload, done) =&gt; {
+    try {
+      const user = await User.findById(
+        jwt_payload.sub
+      );
+      if (user) return done(null, user);
+      return done(null, false);
+    } catch (err) {
+      return done(err, false);
+    }
+  }
+));</code></pre>
+      </div>
+    </div>
+    <div>
+      <div class="card green" style="margin-bottom:.4em;">
+        <h3>Issuing Tokens</h3>
+        <pre><code class="language-javascript">const jwt = require('jsonwebtoken');
+
+app.post('/api/login',
+  async (req, res) =&gt; {
+    const { email, password } = req.body;
+    const user =
+      await User.findOne({ email });
+
+    if (!user || !await bcrypt.compare(
+      password, user.password)) {
+      return res.status(401).json({
+        error: 'Invalid credentials'
+      });
+    }
+
+    const token = jwt.sign(
+      { sub: user.id, email: user.email },
+      process.env.JWT_SECRET,
+      { expiresIn: '1h' }
+    );
+
+    res.json({ token });
+  }
+);</code></pre>
+      </div>
+      <div class="card purple" style="margin-bottom:.4em;">
+        <h3>Protecting API Routes</h3>
+        <pre><code class="language-javascript">app.get('/api/profile',
+  passport.authenticate('jwt',
+    { session: false }),
+  (req, res) =&gt; {
+    res.json({ user: req.user });
+  }
+);</code></pre>
+        <p>Note: <code>session: false</code> &mdash; JWT is <span class="a">stateless</span>. No session needed.</p>
+      </div>
+      <div class="card blue">
+        <h3>Token Extraction Methods</h3>
+        <table>
+          <thead><tr><th>Method</th><th>Extracts From</th></tr></thead>
+          <tbody>
+            <tr><td><code>fromAuthHeaderAsBearerToken()</code></td><td><code>Authorization: Bearer &lt;token&gt;</code></td></tr>
+            <tr><td><code>fromHeader('x-token')</code></td><td>Custom header</td></tr>
+            <tr><td><code>fromUrlQueryParameter('token')</code></td><td>Query string</td></tr>
+            <tr><td><code>fromBodyField('token')</code></td><td>Request body</td></tr>
+          </tbody>
+        </table>
+      </div>
+    </div>
+  </div>
+</section>
+
+<!-- ============================================================ -->
+<!-- SLIDE 12 — PROTECTING ROUTES -->
+<!-- ============================================================ -->
+<section>
+  <div class="slide-hdr"><span class="tag">11</span><h2>Protecting Routes</h2></div>
+  <div class="cols cols-2">
+    <div>
+      <div class="card amber" style="margin-bottom:.4em;">
+        <h3>ensureAuthenticated Middleware</h3>
+        <pre><code class="language-javascript">function ensureAuth(req, res, next) {
+  if (req.isAuthenticated()) {
+    return next();
+  }
+  req.flash('error', 'Please log in');
+  res.redirect('/login');
+}
+
+// Use on individual routes
+app.get('/dashboard', ensureAuth,
+  (req, res) =&gt; {
+    res.render('dashboard', {
+      user: req.user
+    });
+  }
+);
+
+// Use on route groups
+app.use('/admin', ensureAuth, adminRouter);
+</code></pre>
+      </div>
+      <div class="card green">
+        <h3>Guest-Only Middleware</h3>
+        <pre><code class="language-javascript">function ensureGuest(req, res, next) {
+  if (!req.isAuthenticated()) {
+    return next();
+  }
+  res.redirect('/dashboard');
+}
+
+// Prevent logged-in users from
+// seeing login/register pages
+app.get('/login', ensureGuest,
+  (req, res) =&gt; {
+    res.render('login');
+  }
+);</code></pre>
+      </div>
+    </div>
+    <div>
+      <div class="card purple" style="margin-bottom:.4em;">
+        <h3>Role-Based Access Control</h3>
+        <pre><code class="language-javascript">function authorise(...roles) {
+  return (req, res, next) =&gt; {
+    if (!req.isAuthenticated()) {
+      return res.redirect('/login');
+    }
+    if (!roles.includes(req.user.role)) {
+      return res.status(403).render('403',
+        { message: 'Access denied' });
+    }
+    next();
+  };
+}
+
+// Admin-only route
+app.get('/admin/users',
+  authorise('admin'),
+  adminController.listUsers
+);
+
+// Admin or editor
+app.get('/posts/edit/:id',
+  authorise('admin', 'editor'),
+  postController.edit
+);</code></pre>
+      </div>
+      <div class="card blue">
+        <h3>Return-To Pattern</h3>
+        <pre><code class="language-javascript">function ensureAuth(req, res, next) {
+  if (req.isAuthenticated())
+    return next();
+  // Remember where user was going
+  req.session.returnTo = req.originalUrl;
+  res.redirect('/login');
+}
+
+// After login, redirect back
+app.post('/login', passport.authenticate(
+  'local', { failureRedirect: '/login' }),
+  (req, res) =&gt; {
+    const url = req.session.returnTo || '/';
+    delete req.session.returnTo;
+    res.redirect(url);
+  }
+);</code></pre>
+      </div>
+    </div>
+  </div>
+</section>
+
+<!-- ============================================================ -->
+<!-- SLIDE 13 — USER MODEL & DATABASE -->
+<!-- ============================================================ -->
+<section>
+  <div class="slide-hdr"><span class="tag">12</span><h2>User Model &amp; Database</h2></div>
+  <div class="cols cols-2">
+    <div>
+      <div class="card amber" style="margin-bottom:.4em;">
+        <h3>Mongoose User Schema</h3>
+        <pre><code class="language-javascript">const mongoose = require('mongoose');
+
+const userSchema = new mongoose.Schema({
+  name: { type: String, required: true },
+  email: {
+    type: String, required: true,
+    unique: true, lowercase: true
+  },
+  password: String,
+  googleId: String,
+  githubId: String,
+  avatar: String,
+  role: {
+    type: String,
+    enum: ['user', 'editor', 'admin'],
+    default: 'user'
+  },
+  createdAt: {
+    type: Date, default: Date.now
+  }
+});
+
+module.exports =
+  mongoose.model('User', userSchema);</code></pre>
+      </div>
+    </div>
+    <div>
+      <div class="card green" style="margin-bottom:.4em;">
+        <h3>Sequelize User Model</h3>
+        <pre><code class="language-javascript">const { DataTypes } = require('sequelize');
+
+module.exports = (sequelize) =&gt; {
+  return sequelize.define('User', {
+    name: {
+      type: DataTypes.STRING,
+      allowNull: false
+    },
+    email: {
+      type: DataTypes.STRING,
+      allowNull: false, unique: true
+    },
+    password: DataTypes.STRING,
+    googleId: DataTypes.STRING,
+    githubId: DataTypes.STRING,
+    avatar: DataTypes.STRING,
+    role: {
+      type: DataTypes.ENUM(
+        'user', 'editor', 'admin'),
+      defaultValue: 'user'
+    }
+  });
+};</code></pre>
+      </div>
+      <div class="card purple" style="margin-bottom:.4em;">
+        <h3>findOrCreate Pattern</h3>
+        <pre><code class="language-javascript">// Common in OAuth callbacks
+let user = await User.findOne({
+  googleId: profile.id
+});
+if (!user) {
+  user = await User.create({
+    googleId: profile.id,
+    name: profile.displayName,
+    email: profile.emails[0].value
+  });
+}</code></pre>
+      </div>
+      <div class="card blue">
+        <h3>Tip: Flexible Schema</h3>
+        <p>Make <code>password</code>, <code>googleId</code>, and <code>githubId</code> optional. Users who register via OAuth won't have a password; users who register locally won't have provider IDs.</p>
+      </div>
+    </div>
+  </div>
+</section>
+
+<!-- ============================================================ -->
+<!-- SLIDE 14 — MULTIPLE STRATEGIES -->
+<!-- ============================================================ -->
+<section>
+  <div class="slide-hdr"><span class="tag">13</span><h2>Multiple Strategies &mdash; Linking Accounts</h2></div>
+  <div class="cols cols-2">
+    <div>
+      <div class="card amber" style="margin-bottom:.4em;">
+        <h3>Linking OAuth to Existing Accounts</h3>
+        <pre><code class="language-javascript">// In Google strategy verify callback
+async (accessToken, refreshToken,
+       profile, done) =&gt; {
+  // 1. Check if already linked
+  let user = await User.findOne({
+    googleId: profile.id
+  });
+  if (user) return done(null, user);
+
+  // 2. Check if email matches existing user
+  const email = profile.emails[0].value;
+  user = await User.findOne({ email });
+  if (user) {
+    // Link Google to existing account
+    user.googleId = profile.id;
+    user.avatar = user.avatar
+      || profile.photos[0].value;
+    await user.save();
+    return done(null, user);
+  }
+
+  // 3. Create new user
+  user = await User.create({
+    googleId: profile.id,
+    name: profile.displayName,
+    email, avatar: profile.photos[0].value
+  });
+  return done(null, user);
+}</code></pre>
+      </div>
+    </div>
+    <div>
+      <div class="card green" style="margin-bottom:.4em;">
+        <h3>Account Settings Page</h3>
+        <pre><code class="language-javascript">// Link additional providers
+app.get('/account/link/github',
+  ensureAuth,
+  passport.authorize('github', {
+    scope: ['user:email']
+  })
+);
+
+app.get('/account/link/github/callback',
+  ensureAuth,
+  passport.authorize('github', {
+    failureRedirect: '/account'
+  }),
+  async (req, res) =&gt; {
+    // req.account = OAuth profile
+    req.user.githubId = req.account.id;
+    await req.user.save();
+    req.flash('success', 'GitHub linked!');
+    res.redirect('/account');
+  }
+);</code></pre>
+        <p>Note: <code>passport.authorize()</code> does not affect <code>req.user</code> &mdash; it populates <code>req.account</code> instead.</p>
+      </div>
+      <div class="card purple">
+        <h3>Unlink Provider</h3>
+        <pre><code class="language-javascript">app.post('/account/unlink/github',
+  ensureAuth,
+  async (req, res) =&gt; {
+    // Ensure user has another login method
+    if (!req.user.password
+        &amp;&amp; !req.user.googleId) {
+      req.flash('error',
+        'Keep at least one login method');
+      return res.redirect('/account');
+    }
+    req.user.githubId = undefined;
+    await req.user.save();
+    res.redirect('/account');
+  }
+);</code></pre>
+      </div>
+    </div>
+  </div>
+</section>
+
+<!-- ============================================================ -->
+<!-- SLIDE 15 — SECURITY BEST PRACTICES -->
+<!-- ============================================================ -->
+<section>
+  <div class="slide-hdr"><span class="tag">14</span><h2>Security Best Practices</h2></div>
+  <div class="cols cols-2">
+    <div>
+      <div class="card red" style="margin-bottom:.4em;">
+        <h3>Session Fixation</h3>
+        <pre><code class="language-javascript">// Regenerate session after login
+app.post('/login', (req, res, next) =&gt; {
+  passport.authenticate('local',
+    (err, user, info) =&gt; {
+      if (err) return next(err);
+      if (!user) return res.redirect('/login');
+      req.session.regenerate((err) =&gt; {
+        if (err) return next(err);
+        req.login(user, (err) =&gt; {
+          if (err) return next(err);
+          res.redirect('/dashboard');
+        });
+      });
+    }
+  )(req, res, next);
+});</code></pre>
+        <p>Prevents attackers from pre-setting a session ID before the user logs in.</p>
+      </div>
+      <div class="card amber">
+        <h3>Rate Limiting Login Attempts</h3>
+        <pre><code class="language-javascript">const rateLimit = require('express-rate-limit');
+
+const loginLimiter = rateLimit({
+  windowMs: 15 * 60 * 1000, // 15 mins
+  max: 5,
+  message: 'Too many login attempts',
+  standardHeaders: true,
+  legacyHeaders: false
+});
+
+app.post('/login', loginLimiter,
+  passport.authenticate('local', { ... })
+);</code></pre>
+      </div>
+    </div>
+    <div>
+      <div class="card green" style="margin-bottom:.4em;">
+        <h3>Secure Cookie Configuration</h3>
+        <pre><code class="language-javascript">app.use(session({
+  secret: process.env.SESSION_SECRET,
+  cookie: {
+    httpOnly: true,      // No JS access
+    secure: true,        // HTTPS only
+    sameSite: 'strict',  // CSRF protection
+    maxAge: 3600000,     // 1 hour
+    domain: '.myapp.com' // Restrict domain
+  }
+}));</code></pre>
+      </div>
+      <div class="card purple" style="margin-bottom:.4em;">
+        <h3>CSRF Protection</h3>
+        <pre><code class="language-javascript">const csrf = require('csurf');
+app.use(csrf());
+
+// Pass token to templates
+app.use((req, res, next) =&gt; {
+  res.locals.csrfToken = req.csrfToken();
+  next();
+});</code></pre>
+        <pre><code class="language-html">&lt;form method="POST" action="/login"&gt;
+  &lt;input type="hidden" name="_csrf"
+    value="&lt;%= csrfToken %&gt;"&gt;
+  ...
+&lt;/form&gt;</code></pre>
+      </div>
+      <div class="card blue">
+        <h3>Security Checklist</h3>
+        <ul>
+          <li><span class="a">bcrypt</span> with 12+ salt rounds for passwords</li>
+          <li><span class="a">Helmet.js</span> for HTTP security headers</li>
+          <li><span class="a">HTTPS</span> in production (always)</li>
+          <li><span class="a">Input validation</span> with express-validator</li>
+          <li><span class="a">Account lockout</span> after repeated failures</li>
+          <li><span class="a">Audit logging</span> for login events</li>
+        </ul>
+      </div>
+    </div>
+  </div>
+</section>
+
+<!-- ============================================================ -->
+<!-- SLIDE 16 — ERROR HANDLING & FLASH MESSAGES -->
+<!-- ============================================================ -->
+<section>
+  <div class="slide-hdr"><span class="tag">15</span><h2>Error Handling &amp; Flash Messages</h2></div>
+  <div class="cols cols-2">
+    <div>
+      <div class="card amber" style="margin-bottom:.4em;">
+        <h3>Built-In Redirect Options</h3>
+        <pre><code class="language-javascript">passport.authenticate('local', {
+  successRedirect: '/dashboard',
+  failureRedirect: '/login',
+  failureFlash: true,
+  // or custom message:
+  failureFlash: 'Invalid credentials',
+  successFlash: 'Welcome back!'
+});</code></pre>
+        <p><code>failureFlash: true</code> uses the message from the strategy's <code>done(null, false, { message })</code> call.</p>
+      </div>
+      <div class="card green" style="margin-bottom:.4em;">
+        <h3>Custom Callback Pattern</h3>
+        <pre><code class="language-javascript">app.post('/login', (req, res, next) =&gt; {
+  passport.authenticate('local',
+    (err, user, info) =&gt; {
+      if (err) return next(err);
+      if (!user) {
+        // Custom error handling
+        return res.status(401).render(
+          'login', {
+            error: info.message,
+            email: req.body.email
+          }
+        );
+      }
+      req.logIn(user, (err) =&gt; {
+        if (err) return next(err);
+        return res.redirect('/dashboard');
+      });
+    }
+  )(req, res, next);
+});</code></pre>
+      </div>
+    </div>
+    <div>
+      <div class="card purple" style="margin-bottom:.4em;">
+        <h3>Flash Message Template</h3>
+        <pre><code class="language-html">&lt;!-- views/partials/flash.ejs --&gt;
+&lt;% if (success &amp;&amp; success.length) { %&gt;
+  &lt;div class="alert alert-success"&gt;
+    &lt;%= success %&gt;
+  &lt;/div&gt;
+&lt;% } %&gt;
+&lt;% if (error &amp;&amp; error.length) { %&gt;
+  &lt;div class="alert alert-danger"&gt;
+    &lt;%= error %&gt;
+  &lt;/div&gt;
+&lt;% } %&gt;</code></pre>
+      </div>
+      <div class="card blue" style="margin-bottom:.4em;">
+        <h3>Common Error Scenarios</h3>
+        <table>
+          <thead><tr><th>Error</th><th>Cause</th></tr></thead>
+          <tbody>
+            <tr><td><code>Failed to serialize user</code></td><td>Missing <code>serializeUser</code></td></tr>
+            <tr><td><code>Failed to deserialize user</code></td><td>User deleted from DB</td></tr>
+            <tr><td><code>No auth token found</code></td><td>Missing/expired JWT</td></tr>
+            <tr><td><code>OAuth callback error</code></td><td>Mismatched redirect URI</td></tr>
+            <tr><td><code>InternalOAuthError</code></td><td>Provider API down or wrong credentials</td></tr>
+          </tbody>
+        </table>
+      </div>
+      <div class="card red">
+        <h3>Tip</h3>
+        <p>Use the <span class="a">custom callback pattern</span> when you need fine-grained control (API JSON responses, custom status codes, form repopulation). Use <span class="a">redirect options</span> for simple page-based flows.</p>
+      </div>
+    </div>
+  </div>
+</section>
+
+<!-- ============================================================ -->
+<!-- SLIDE 17 — TESTING AUTHENTICATION -->
+<!-- ============================================================ -->
+<section>
+  <div class="slide-hdr"><span class="tag">16</span><h2>Testing Authentication</h2></div>
+  <div class="cols cols-2">
+    <div>
+      <div class="card amber" style="margin-bottom:.4em;">
+        <h3>Supertest with Sessions</h3>
+        <pre><code class="language-javascript">const request = require('supertest');
+const app = require('../app');
+
+describe('Auth Routes', () =&gt; {
+  const agent = request.agent(app);
+
+  it('should log in', async () =&gt; {
+    await agent
+      .post('/login')
+      .send({
+        email: 'test@test.com',
+        password: 'password123'
+      })
+      .expect(302)
+      .expect('Location', '/dashboard');
+  });
+
+  it('should access protected route',
+    async () =&gt; {
+      // Agent retains cookies/session
+      const res = await agent
+        .get('/dashboard')
+        .expect(200);
+      expect(res.text)
+        .toContain('Dashboard');
+    }
+  );
+});</code></pre>
+      </div>
+    </div>
+    <div>
+      <div class="card green" style="margin-bottom:.4em;">
+        <h3>Mocking Passport</h3>
+        <pre><code class="language-javascript">// test/helpers/mockAuth.js
+function mockAuth(user) {
+  return (req, res, next) =&gt; {
+    req.isAuthenticated = () =&gt; true;
+    req.user = user;
+    next();
+  };
+}
+
+// In test setup
+app.use(mockAuth({
+  id: '1', name: 'Test User',
+  email: 'test@test.com', role: 'admin'
+}));
+
+// Now all routes see req.user
+// without actual authentication</code></pre>
+      </div>
+      <div class="card purple" style="margin-bottom:.4em;">
+        <h3>Integration Test Checklist</h3>
+        <ul>
+          <li>Login with valid credentials &rarr; 302 to dashboard</li>
+          <li>Login with invalid credentials &rarr; 302 to login + flash</li>
+          <li>Access protected route without auth &rarr; 302 to login</li>
+          <li>Access protected route with auth &rarr; 200</li>
+          <li>Logout &rarr; session cleared, 302 to home</li>
+          <li>Role-restricted route &rarr; 403 for wrong role</li>
+        </ul>
+      </div>
+      <div class="card blue">
+        <h3>Test Database Strategy</h3>
+        <p>Use a separate test database or in-memory MongoDB (<code>mongodb-memory-server</code>). Seed a test user before each suite. Clean up after tests.</p>
+      </div>
+    </div>
+  </div>
+</section>
+
+<!-- ============================================================ -->
+<!-- SLIDE 18 — COMPLETE WORKING EXAMPLE -->
+<!-- ============================================================ -->
+<section>
+  <div class="slide-hdr"><span class="tag">17</span><h2>Complete Working Example</h2></div>
+  <div class="cols cols-2">
+    <div>
+      <div class="card amber" style="margin-bottom:.4em;">
+        <h3>app.js &mdash; Express + Passport + EJS</h3>
+        <pre><code class="language-javascript">const express = require('express');
+const session = require('express-session');
+const passport = require('passport');
+const flash = require('connect-flash');
+const path = require('path');
+
+require('./config/passport')(passport);
+
+const app = express();
+app.set('view engine', 'ejs');
+app.set('views',
+  path.join(__dirname, 'views'));
+app.use(express.urlencoded(
+  { extended: true }));
+app.use(express.static('public'));
+
+app.use(session({
+  secret: process.env.SESSION_SECRET,
+  resave: false,
+  saveUninitialized: false
+}));
+app.use(passport.initialize());
+app.use(passport.session());
+app.use(flash());
+
+app.use((req, res, next) =&gt; {
+  res.locals.currentUser = req.user;
+  res.locals.success = req.flash('success');
+  res.locals.error = req.flash('error');
+  next();
+});
+
+app.use('/', require('./routes/index'));
+app.use('/auth', require('./routes/auth'));
+
+app.listen(3000);</code></pre>
+      </div>
+    </div>
+    <div>
+      <div class="card green" style="margin-bottom:.4em;">
+        <h3>config/passport.js</h3>
+        <pre><code class="language-javascript">const LocalStrategy =
+  require('passport-local').Strategy;
+const GoogleStrategy =
+  require('passport-google-oauth20').Strategy;
+const bcrypt = require('bcrypt');
+const User = require('../models/User');
+
+module.exports = (passport) =&gt; {
+  passport.use(new LocalStrategy(
+    { usernameField: 'email' },
+    async (email, password, done) =&gt; {
+      const user =
+        await User.findOne({ email });
+      if (!user) return done(null, false,
+        { message: 'No account found' });
+      const match = await bcrypt.compare(
+        password, user.password);
+      if (!match) return done(null, false,
+        { message: 'Wrong password' });
+      return done(null, user);
+    }
+  ));
+
+  passport.use(new GoogleStrategy({ ... },
+    async (access, refresh, profile, done) =&gt; {
+      // findOrCreate logic
+    }
+  ));
+
+  passport.serializeUser((user, done) =&gt;
+    done(null, user.id));
+  passport.deserializeUser(async (id, done) =&gt;
+    done(null, await User.findById(id)));
+};</code></pre>
+      </div>
+      <div class="card purple">
+        <h3>Project Structure</h3>
+        <pre><code class="language-text">passport-app/
+├── app.js
+├── .env
+├── config/
+│   └── passport.js
+├── models/
+│   └── User.js
+├── routes/
+│   ├── index.js
+│   └── auth.js
+├── middleware/
+│   └── auth.js
+└── views/
+    ├── layouts/main.ejs
+    ├── partials/nav.ejs
+    ├── login.ejs
+    ├── register.ejs
+    └── dashboard.ejs</code></pre>
+      </div>
+    </div>
+  </div>
+</section>
+
+<!-- ============================================================ -->
+<!-- SLIDE 19 — SUMMARY & NEXT STEPS -->
+<!-- ============================================================ -->
+<section>
+  <div class="slide-hdr"><span class="tag">18</span><h2>Summary &amp; Next Steps</h2></div>
+  <div class="cols cols-3">
+    <div class="card amber">
+      <h3>Core Takeaways</h3>
+      <ul>
+        <li>Passport.js = pluggable authentication via the strategy pattern</li>
+        <li>500+ strategies: local, Google, GitHub, JWT, and more</li>
+        <li>serializeUser stores, deserializeUser restores from session</li>
+        <li>OAuth 2.0 for third-party login without handling passwords</li>
+        <li>JWT for stateless API authentication</li>
+      </ul>
+    </div>
+    <div class="card green">
+      <h3>Best Practices</h3>
+      <ul>
+        <li>Always hash passwords with bcrypt (12+ rounds)</li>
+        <li>Use a production session store (Redis, Mongo)</li>
+        <li>Secure cookies: httpOnly, secure, sameSite</li>
+        <li>Rate-limit login endpoints</li>
+        <li>Regenerate sessions after login</li>
+        <li>Validate all input with express-validator</li>
+      </ul>
+    </div>
+    <div class="card purple">
+      <h3>Next Steps</h3>
+      <ul>
+        <li>Build a full CRUD app with Passport auth</li>
+        <li>Add Google + GitHub OAuth to an existing app</li>
+        <li>Implement JWT auth for a REST API</li>
+        <li>Add two-factor authentication (2FA)</li>
+        <li>Explore Passport with TypeScript</li>
+        <li>Try alternative libraries: Auth.js, Lucia</li>
+      </ul>
+    </div>
+  </div>
+  <div class="cols cols-2" style="margin-top:.4em;">
+    <div class="card blue">
+      <h3>Essential Resources</h3>
+      <ul>
+        <li><span class="a">Official Docs:</span> <span class="mono">passportjs.org</span></li>
+        <li><span class="a">GitHub:</span> <span class="mono">github.com/jaredhanson/passport</span></li>
+        <li><span class="a">npm:</span> <span class="mono">npmjs.com/package/passport</span></li>
+        <li><span class="a">Strategies:</span> <span class="mono">passportjs.org/packages/</span></li>
+      </ul>
+    </div>
+    <div class="card red">
+      <h3>Key Packages</h3>
+      <table>
+        <thead><tr><th>Package</th><th>Purpose</th></tr></thead>
+        <tbody>
+          <tr><td><code>passport</code></td><td>Core authentication framework</td></tr>
+          <tr><td><code>passport-local</code></td><td>Username/password strategy</td></tr>
+          <tr><td><code>passport-google-oauth20</code></td><td>Google OAuth 2.0</td></tr>
+          <tr><td><code>passport-github2</code></td><td>GitHub OAuth</td></tr>
+          <tr><td><code>passport-jwt</code></td><td>JSON Web Token strategy</td></tr>
+        </tbody>
+      </table>
+    </div>
+  </div>
+</section>
+
+  </div></div>
+  <script src="https://cdnjs.cloudflare.com/ajax/libs/reveal.js/4.6.1/reveal.min.js"></script>
+  <script src="https://cdnjs.cloudflare.com/ajax/libs/reveal.js/4.6.1/plugin/highlight/highlight.min.js"></script>
+  <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/reveal.js/4.6.1/plugin/highlight/monokai.min.css">
+  <script>
+    Reveal.initialize({
+      hash: true, transition: 'fade', transitionSpeed: 'fast',
+      controls: true, progress: true, center: false,
+      width: 1100, height: 900, margin: 0.01,
+      plugins: [RevealHighlight], highlight: { theme: 'monokai' }
+    });
+  </script>
+</body>
+</html>
